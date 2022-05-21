@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:layout_margin="6dp">
+
+    <FrameLayout
+        android:id="@+id/conainer_fram"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/rg_actvt_main" />
+
+    <RadioGroup
+        android:id="@+id/rg_actvt_main"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/rb_honme"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:button="@null"
+            android:text="首页"
+            android:textColor="@color/front_checked_color"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:drawableTop="@drawable/home_check_selector"
+            android:layout_margin="10dp"/>
+
+        <RadioButton
+            android:id="@+id/rb_list"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:button="@null"
+            android:text="定时列表"
+            android:textColor="@color/front_checked_color"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:drawableTop="@drawable/time_list_checkselector"
+            android:layout_margin="10dp"/>
+
+    </RadioGroup>
+
+
+
+</RelativeLayout>

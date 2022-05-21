@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:layout_margin="15dp">
+
+
+
+    <TextView
+        android:id="@+id/tv_ifclose_service"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="已关闭"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:layout_centerInParent="true"/>
+
+    <EditText
+        android:id="@+id/et_serch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="请输入想要查找的字符"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@id/tv_ifclose_service"/>
+
+    <Button
+        android:id="@+id/btn_hf_confirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="确定"
+        android:layout_toRightOf="@id/et_serch"
+        android:layout_alignBaseline="@id/et_serch"
+        android:background="@color/front_checked_color"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/btn_start_server"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="0dp"
+            android:layout_marginRight="0dp"
+            android:layout_marginBottom="11dp"
+            android:layout_toLeftOf="@id/btn_start_server"
+            android:text="点击右侧按钮进入辅助服务界面"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/btn_start_server"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:text="开启"
+            android:textSize="15sp" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

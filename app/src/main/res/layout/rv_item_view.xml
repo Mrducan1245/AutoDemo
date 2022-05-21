@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="10dp">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="30dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:background="@color/purple_200">
+
+
+            <TextView
+                android:id="@+id/tv_noon_afternoon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="上午"
+                android:textSize="23sp"
+                android:layout_marginLeft="10dp"/>
+
+            <TextView
+                android:id="@+id/tv_clock_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2:30"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:layout_toRightOf="@id/tv_noon_afternoon"
+                android:layout_alignBottom="@id/tv_noon_afternoon"
+                android:layout_marginLeft="3dp"/>
+
+            <TextView
+                android:id="@+id/tv_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4月11日"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_centerVertical="true"
+                android:layout_toLeftOf="@id/switch_excute"
+                android:layout_marginRight="12dp"/>
+
+            <Switch
+                android:id="@+id/switch_excute"
+                android:layout_width="50dp"
+                android:layout_height="40dp"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+
+        </RelativeLayout>
+
+
+    </androidx.cardview.widget.CardView>
+
+
+</FrameLayout>

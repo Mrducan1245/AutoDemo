@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">AutoDemo</string>
+    <string name="accessibilitysevice_desc">打开此服务可以每天自动领取淘金币</string>
+</resources>
