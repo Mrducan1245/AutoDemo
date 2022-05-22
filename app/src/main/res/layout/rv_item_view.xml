@@ -32,22 +32,50 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="2:30"
-                android:textSize="30sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_toRightOf="@id/tv_noon_afternoon"
                 android:layout_alignBottom="@id/tv_noon_afternoon"
                 android:layout_marginLeft="3dp"/>
 
             <TextView
-                android:id="@+id/tv_date"
+                android:id="@+id/inter_mills"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="4月11日"
+                android:layout_centerInParent="true"
+                android:text="5s"
                 android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_centerVertical="true"
-                android:layout_toLeftOf="@id/switch_excute"
-                android:layout_marginRight="12dp"/>
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_toStartOf="@id/switch_excute"
+                android:layout_marginEnd="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_year"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:text="2002年"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:layout_weight="1"
+                    android:gravity="bottom"/>
+
+                <TextView
+                    android:id="@+id/tv_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:text="4月11日"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_weight="1"/>
+
+
+            </LinearLayout>
+
 
             <Switch
                 android:id="@+id/switch_excute"

@@ -24,6 +24,7 @@ import androidx.annotation.RequiresApi;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Stack;
 
 public class AutoBilily extends AccessibilityService {
@@ -35,7 +36,9 @@ public class AutoBilily extends AccessibilityService {
     public String eleText = "领淘金币";
     private final MainHandler mainHandler = new MainHandler(this);
     //定时任务管理器
-    public static AlarmManager alarmManager ;
+    public static AlarmManager alarmManager;
+    private  PowerManager pm;
+    private  boolean screenOn = false;
 
     //消息处理器
     private class MainHandler extends Handler{
@@ -95,11 +98,12 @@ public class AutoBilily extends AccessibilityService {
                 Log.e("服务","窗口有变化,当前界面是："+className);
                 //只要界面有变化就获取当前界面的根布局
                 AccessibilityNodeInfo rootNode = getRootInActiveWindow();
-                if (rootNode == null){
-                    return;
-                }
+//                if (rootNode == null){
+//                    return;
+//                }
                 //通过找text找到eleText元素并执行点击
                 if (className.equals(LAUCHER)){
+                    Log.e("LAUCHER","已经进入了判断函数");
                     wakeUpAndUnlock();//唤醒屏幕
                     AccessibilityNodeInfo goalNode = findNodeByText2(rootNode,eleText);
                     performClick(goalNode);
@@ -330,26 +334,21 @@ public class AutoBilily extends AccessibilityService {
     @SuppressLint("ObsoleteSdkInt")
     public void wakeUpAndUnlock() {
         // 获取电源管理器对象
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        boolean screenOn;
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-            screenOn = pm.isInteractive();
-        } else {
-            screenOn = pm.isScreenOn();
-        }
-
-        Log.d("WakeScreen0","screenOn: " + screenOn);
+        pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        screenOn = pm.isInteractive();
+        Log.e("WakeScreen0","screenOn: " + screenOn);
         if (!screenOn) {
             // 获取PowerManager.WakeLock对象,后面的参数|表示同时传入两个值,最后的是LogCat里用的Tag
             @SuppressLint("InvalidWakeLockTag") PowerManager.WakeLock wl = pm.newWakeLock(
                     PowerManager.ACQUIRE_CAUSES_WAKEUP |
-                            PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "bright");
-            wl.acquire(10000); // 点亮屏幕
+                            PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "ScreenOn");
+            wl.acquire(1000); // 点亮屏幕
             wl.release(); // 释放
         }
         // 屏幕解锁
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock keyguardLock = keyguardManager.newKeyguardLock("unLock");
+        keyguardLock.reenableKeyguard();
         keyguardLock.disableKeyguard(); // 解锁
     }
 

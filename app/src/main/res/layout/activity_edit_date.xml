@@ -35,10 +35,10 @@
                 android:id="@+id/tv_show_week"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
                 android:text="每周三"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_centerVertical="true"/>
+                android:textStyle="bold" />
 
             <ImageButton
                 android:id="@+id/ib_date_picker"
@@ -53,6 +53,17 @@
 
 
     </androidx.cardview.widget.CardView>
+
+    <EditText
+        android:id="@+id/et_input_mills"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:drawableRight="@drawable/ic_baseline_timer_24"
+        android:focusable="true"
+        android:hint="这里输入延迟时间(s)"
+        android:inputType="time"
+        android:singleLine="true" />
 
     <LinearLayout
         android:layout_width="match_parent"
