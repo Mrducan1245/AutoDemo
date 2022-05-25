@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
-import android.app.Application;
 import android.app.DatePickerDialog;
 import android.app.PendingIntent;
 import android.content.ComponentName;
@@ -21,12 +20,9 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 
 public class EditDateActivity extends AppCompatActivity implements View.OnClickListener {
     private TimePicker timePicker;
@@ -155,10 +151,13 @@ public class EditDateActivity extends AppCompatActivity implements View.OnClickL
         intent.setComponent(componentName);
 
         @SuppressLint("UnspecifiedImmutableFlag") PendingIntent pendingIntent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_CANCEL_CURRENT);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,startMills,intervalMills,pendingIntent);
-//        alarmManager.setExact(AlarmManager.RTC_WAKEUP,startMills,pendingIntent);
+//        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,startMills,intervalMills,pendingIntent);
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP,startMills,pendingIntent);
         Log.e("alarm","闹钟启动时间是："+TimeTransformUtil.mills2Date(startMills)+",间隔时间是："+intervalMills);
         Log.e("alarm","当前正确时间是："+TimeTransformUtil.mills2Date(System.currentTimeMillis())+",间隔时间是："+intervalMills);
         AutoBilily.alarmManager = alarmManager;
+        AutoBilily.startMills = startMills ;
+        AutoBilily.intervalMills = intervalMills;
+        AutoBilily.pendingIntent = pendingIntent;
     }
 }

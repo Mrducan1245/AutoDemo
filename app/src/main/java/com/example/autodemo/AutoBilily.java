@@ -7,8 +7,6 @@ import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Path;
 import android.os.Build;
 import android.os.Handler;
@@ -24,13 +22,11 @@ import androidx.annotation.RequiresApi;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Stack;
 
 public class AutoBilily extends AccessibilityService {
 
     private final String LAUCHER = "com.taobao.tao.TBMainActivity";
-    private int excuteOrder = 0;//执行顺序
     private final  String TAG = "SpeedPicker";
     private AccessibilityNodeInfo goalNode;
     public String eleText = "领淘金币";
@@ -39,6 +35,10 @@ public class AutoBilily extends AccessibilityService {
     public static AlarmManager alarmManager;
     private  PowerManager pm;
     private  boolean screenOn = false;
+
+    //和闹钟启动有关
+    public static long startMills,intervalMills;
+    public static PendingIntent pendingIntent;
 
     //消息处理器
     private class MainHandler extends Handler{
@@ -56,23 +56,45 @@ public class AutoBilily extends AccessibilityService {
             if (null!=autoBilily){
                 //执行业务逻辑,当消息为1时就开始抓取目标node并且点击
                 if (msg.what == 1){
-                    //说明在什么界面然后，执行相应的操作,bounds:[370,569][711,674]
-                    dispatchGestureView(1,540,622);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    goalNode = findNodeByText((AccessibilityNodeInfo) msg.obj, "赚金币");
-                    if (goalNode == null) return;
-                    performClick(goalNode);
-                    Log.e(TAG,"已经点击了node"+goalNode);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //说明在什么界面然后，执行相应的操作,bounds:[370,569][711,674]
+                            dispatchGestureView(1,540,622);
+                            Log.e(TAG,"已经点击了坐标位置");
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+//                            goalNode = findNodeByText((AccessibilityNodeInfo) msg.obj, "+55");
+//                            if (goalNode == null) return;
+//                            performClick(goalNode);
+//                            [370,745][711,989]
+                            dispatchGestureView(1,540,833);
+                            Log.e(TAG,"已经点击了坐标位置2");
+//                            Log.e(TAG,"已经点击了node"+goalNode);
+                        }
+                    }).start();
                 }else if (msg.what == 2){
-                    goalNode = findNodeByText((AccessibilityNodeInfo) msg.obj, "明日再来");
-                    if (goalNode == null) return;
-//                    performClick(goalNode);
-                    Log.e(TAG,"已经点击了明日再来node");
-                    performGlobalAction(GLOBAL_ACTION_HOME);
+//                    [811,480][1015,566]
+                    dispatchGestureView(1,913,523);
+//                    goalNode = findNodeByText((AccessibilityNodeInfo) msg.obj, "明日再来");
+//                    if (goalNode == null) return;
+////                    performClick(goalNode);
+                    Log.e(TAG,"已经点击了坐标3");
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            performGlobalAction(GLOBAL_ACTION_HOME);
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+                        }
+                    }).start();
                 }
             }
         }
@@ -103,7 +125,6 @@ public class AutoBilily extends AccessibilityService {
 //                }
                 //通过找text找到eleText元素并执行点击
                 if (className.equals(LAUCHER)){
-                    Log.e("LAUCHER","已经进入了判断函数");
                     wakeUpAndUnlock();//唤醒屏幕
                     AccessibilityNodeInfo goalNode = findNodeByText2(rootNode,eleText);
                     performClick(goalNode);
@@ -112,7 +133,8 @@ public class AutoBilily extends AccessibilityService {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            ifLoadGoalNode("赚金币",1);
+                            Log.e("LAUCHER","已经进入了run函数");
+                            isLoadGoalNodeSuccessfull("淘宝人生",1);
                         }
                     }).start();
 
@@ -120,9 +142,12 @@ public class AutoBilily extends AccessibilityService {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            ifLoadGoalNode("明日再来",2);
+                            isLoadGoalNodeSuccessfull("找答案",2);
                         }
                     }).start();
+                    //重新设置闹钟
+                    startMills += intervalMills;//执行一次闹钟后在重新执行一次
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, startMills,pendingIntent);
                 }
                 break;
         }
@@ -133,11 +158,12 @@ public class AutoBilily extends AccessibilityService {
      * @param nodeText
      * @return
      */
-    private void ifLoadGoalNode(String nodeText,int what){
-        AccessibilityNodeInfo webViewNode;
+    private void isLoadGoalNodeSuccessfull(String nodeText, int what){
+        AccessibilityNodeInfo rootNode;
+        AccessibilityNodeInfo webViewNode ;
         do {
-            AccessibilityNodeInfo rootNode = getRootInActiveWindow();
-            webViewNode = returnWebView(rootNode);
+             rootNode = getRootInActiveWindow();
+             webViewNode = returnWebView(rootNode);
             if (webViewNode == null){
                 continue;
             }
@@ -326,7 +352,6 @@ public class AutoBilily extends AccessibilityService {
         }
         return res;
     }
-
 
     /**
      * 唤醒手机屏幕并解锁

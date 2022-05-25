@@ -1,16 +1,25 @@
 package com.example.autodemo;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,7 +33,7 @@ public class SetTImeFragment extends Fragment {
     private MyApplication myApplication;
     private ArrayList<DateTime> dateTimes;
 
-    public   TimeAdapter timeAdapter;
+    public TimeAdapter timeAdapter;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -57,7 +66,7 @@ public class SetTImeFragment extends Fragment {
 
     private static class ClickListner implements View.OnClickListener{
 
-        @SuppressLint("NonConstantResourceId")
+        @SuppressLint({"NonConstantResourceId", "ResourceType", "RtlHardcoded"})
         @Override
         public void onClick(View view) {
             switch (view.getId()){
@@ -66,7 +75,6 @@ public class SetTImeFragment extends Fragment {
                     view.getContext().startActivity(intent);
                     break;
                 case R.id.ib_more:
-                    Toast.makeText(view.getContext(), "点击了更多按钮",Toast.LENGTH_SHORT);
                     break;
             }
         }
