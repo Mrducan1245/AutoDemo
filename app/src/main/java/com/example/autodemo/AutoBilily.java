@@ -6,9 +6,12 @@ import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Path;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
@@ -26,7 +29,7 @@ import java.util.Stack;
 
 public class AutoBilily extends AccessibilityService {
 
-    private final String LAUCHER = "com.taobao.tao.TBMainActivity";
+    private final String LAUCHER = "com.syriusrobotics.platform.jarvis.MainFlutterActivity";
     private final  String TAG = "SpeedPicker";
     private AccessibilityNodeInfo goalNode;
     public String eleText = "领淘金币";
@@ -35,6 +38,7 @@ public class AutoBilily extends AccessibilityService {
     public static AlarmManager alarmManager;
     private  PowerManager pm;
     private  boolean screenOn = false;
+    private boolean isClickInputBtnFirst = true;
 
     //和闹钟启动有关
     public static long startMills,intervalMills;
@@ -114,42 +118,116 @@ public class AutoBilily extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event) {
         int eventType = event.getEventType();
         switch (eventType){
-            case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
+            case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
                 if (event.getClassName() == null) return;
                 String className = event.getClassName().toString();
-                Log.e("服务","窗口有变化,当前界面是："+className);
+//                Log.e("服务","窗口内容有变化,当前界面是："+className);
                 //只要界面有变化就获取当前界面的根布局
                 AccessibilityNodeInfo rootNode = getRootInActiveWindow();
-//                if (rootNode == null){
-//                    return;
-//                }
-                //通过找text找到eleText元素并执行点击
-                if (className.equals(LAUCHER)){
-                    wakeUpAndUnlock();//唤醒屏幕
-                    AccessibilityNodeInfo goalNode = findNodeByText2(rootNode,eleText);
-                    performClick(goalNode);
-                }else if (className.equals("com.taobao.browser.BrowserActivity")){
-                    //当跳转到这个界面时开启新的线程并循环抓取那个元素是不是一直都在，抓到了就把消息发给主线程让它点击那个按钮
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.e("LAUCHER","已经进入了run函数");
-                            isLoadGoalNodeSuccessfull("淘宝人生",1);
-                        }
-                    }).start();
-
-                }else if (className.equals("com.taobao.browser.exbrowser.BrowserUpperActivity")){
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            isLoadGoalNodeSuccessfull("找答案",2);
-                        }
-                    }).start();
-                    //重新设置闹钟
-                    startMills += intervalMills;//执行一次闹钟后在重新执行一次
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, startMills,pendingIntent);
+                AccessibilityNodeInfo webView;
+                if (rootNode == null){
+                    Log.e(TAG,"rootNode为空");
+                    return;
                 }
+                ArrayList<String> textCollect = judgeUI(rootNode);
+                if (textCollect.contains("打包绑定区")&&textCollect.contains("前往")){
+                    Log.e("界面","前往打包绑定区。。。");
+                    return;
+                }else if (textCollect.contains("扫码绑定") && isClickInputBtnFirst){
+                    Log.e("界面","等待绑定载物箱。。。");
+                    webView = returnWebView(rootNode);
+                    AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
+                    AccessibilityNodeInfo inputEdt = findNodeByClassName(webView,"android.widget.EditText");
+                    //点击输入按钮并且输入文字
+                    clickBtnAndInputText(inputBtn,inputEdt);
+                    isClickInputBtnFirst = false;
+                    return;
+                }else if (textCollect.contains("前往")&& !textCollect.contains("打包绑定区")){
+                    isClickInputBtnFirst = true;
+                    Log.e("界面","前往拣货点中。。。。");
+                    return;
+                }else if (textCollect.contains("输入") && textCollect.contains("异常上报")&& !textCollect.contains("扫码绑定") && isClickInputBtnFirst){
+                    Log.e("界面", "正在拣货点位置待拣货");
+                    webView = returnWebView(rootNode);
+                    //
+                    AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
+                    AccessibilityNodeInfo inputEdt = findNodeByClassName(webView,"android.widget.EditText");
+                    //点击输入按钮并且输入文字
+                    clickBtnAndInputText(inputBtn,inputEdt);
+                    isClickInputBtnFirst = false;
+                    return;
+                }else if (textCollect.contains("异常处理区")){
+                    Log.e("界面","正在前往异常处理区。。。");
+                    return;
+                }else if (textCollect.contains("确定")) {
+                    //包含着两个那么直接点击这俩按钮
+                    webView = returnWebView(rootNode);
+                    AccessibilityNodeInfo confirmBtn = findNodeByText(webView, "确定");
+                    performClick(confirmBtn);
+                    return;
+
+                }else if (textCollect.contains("完成")){
+                    webView = returnWebView(rootNode);
+                    AccessibilityNodeInfo completeBtn = findNodeByText(webView, "完成");
+                    performClick(completeBtn);
+                    return;
+
+                }else if (textCollect.contains("已取下")){
+                    webView = returnWebView(rootNode);
+                    AccessibilityNodeInfo uploadBtn = findNodeByText(webView, "已取下");
+                    performClick(uploadBtn);
+                    return;
+                }
+//                //通过找text找到eleText元素并执行点击
+//                if (className.equals(LAUCHER)){
+//                    wakeUpAndUnlock();//唤醒屏幕
+//                    AccessibilityNodeInfo goalNode = findNodeByText2(rootNode,eleText);
+//                    performClick(goalNode);
+//                }else if (className.equals("com.taobao.browser.BrowserActivity")){
+//                    //当跳转到这个界面时开启新的线程并循环抓取那个元素是不是一直都在，抓到了就把消息发给主线程让它点击那个按钮
+//                    new Thread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            Log.e("LAUCHER","已经进入了run函数");
+//                            isLoadGoalNodeSuccessfull("淘宝人生",1);
+//                        }
+//                    }).start();
+//
+//                }else if (className.equals("com.taobao.browser.exbrowser.BrowserUpperActivity")){
+//                    new Thread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            isLoadGoalNodeSuccessfull("找答案",2);
+//                        }
+//                    }).start();
+//                    //重新设置闹钟
+//                    startMills += intervalMills;//执行一次闹钟后在重新执行一次
+//                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, startMills,pendingIntent);
+//                }
                 break;
+        }
+    }
+
+    /**
+     * 点击输入按钮并且在输入框里输入文字
+     * @param inputBtn
+     * @param inputEdt
+     */
+    private void clickBtnAndInputText(AccessibilityNodeInfo inputBtn,AccessibilityNodeInfo inputEdt) {
+
+        if (inputBtn != null)  {
+            performClick(inputBtn);
+        }else if (inputEdt != null) {
+//            Bundle bundle = new Bundle();
+//            bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"199103181516");
+//            inputEdt.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT);
+            ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("text", "199103181516");
+            clipboard.setPrimaryClip(clip);
+            //焦点（n是AccessibilityNodeInfo对象）
+//            inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+            //粘贴进入内容
+            inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
         }
     }
 
@@ -188,6 +266,31 @@ public class AutoBilily extends AccessibilityService {
             if (tempNode == null) continue;
             if (tempNode.getText()!=null && tempNode.getText().toString().equals(goalText)){
                 Log.e(TAG,"恭喜，找到了目标node"+goalText);
+                return tempNode;
+            }
+            int childount = tempNode.getChildCount();
+            if (childount == 0) continue;
+            for (int i =0;i<childount;i++){
+                nodeStack.push(tempNode.getChild(i));
+            }
+        }
+        Log.e(TAG,"找不到目标node");
+        return null;
+    }
+
+    /**
+     * 当目标node在webViewNode里是，通过控件类型名称找到对应node
+     */
+    private AccessibilityNodeInfo findNodeByClassName(AccessibilityNodeInfo webViewNode,String goalClassName){
+        AccessibilityNodeInfo tempNode ;
+        if (webViewNode == null) return null;
+        Stack<AccessibilityNodeInfo> nodeStack = new Stack<>();
+        nodeStack.add(webViewNode);
+        while (!nodeStack.isEmpty()){
+            tempNode = nodeStack.pop();
+            if (tempNode == null) continue;
+            if (tempNode.getClassName()!=null && tempNode.getClassName().toString().equals(goalClassName)){
+                Log.e(TAG,"恭喜，找到了目标node:"+goalClassName);
                 return tempNode;
             }
             int childount = tempNode.getChildCount();
