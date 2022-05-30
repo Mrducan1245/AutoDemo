@@ -11,10 +11,12 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Path;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -132,7 +134,10 @@ public class AutoBilily extends AccessibilityService {
                 if (textCollect.contains("待命区")){
                     Log.e("界面","前往待命区。。。");
                     return;
-                }else if (textCollect.contains("异常处理区")){
+                }else if (textCollect.contains("等待任务中")){
+                    Log.e("界面","等待任务中。。。");
+                    return;
+                } else if (textCollect.contains("异常处理区")){
                     Log.e("界面","正在前往异常处理区。。。");
                     return;
                 } else if (textCollect.contains("打包绑定区")&&textCollect.contains("前往")){
@@ -146,16 +151,16 @@ public class AutoBilily extends AccessibilityService {
                     if (isClickInputBtnFirst){
                         AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
                         performClick(inputBtn);
+                        isClickInputBtnFirst = false;
                         return;
                     }
-                    AccessibilityNodeInfo inputEdt = findNodeByIsFouse(webView);
+                    AccessibilityNodeInfo inputEdt = findNodeByIsFocuseable(webView);
                     //点击输入按钮并且输入文字
                     try {
                         clickBtnAndInputText(inputEdt);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    isClickInputBtnFirst = false;
                     return;
 
                 }else if (textCollect.contains("前往")&& !textCollect.contains("打包绑定区")){
@@ -170,19 +175,18 @@ public class AutoBilily extends AccessibilityService {
                     if (isClickInputBtnFirst){
                         AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
                         performClick(inputBtn);
+                        isClickInputBtnFirst = false;
                         return;
                     }
-                    AccessibilityNodeInfo inputEdt = findNodeByIsFouse(webView);
+                    AccessibilityNodeInfo inputEdt = findNodeByIsFocuseable(webView);
                     //点击输入按钮并且输入文字
                     try {
                         clickBtnAndInputText(inputEdt);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    isClickInputBtnFirst = false;
                     return;
                 }else if (textCollect.contains("确定")) {
-                    //包含着两个那么直接点击这俩按钮
                     webView = returnWebView(rootNode);
                     AccessibilityNodeInfo confirmBtn = findNodeByText(webView, "确定");
                     performClick(confirmBtn);
@@ -238,13 +242,18 @@ public class AutoBilily extends AccessibilityService {
         if (inputEdt == null )  {
             return;
         }
-        ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("text", "199103181516");
-        clipboard.setPrimaryClip(clip);
+//        ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
+//        ClipData clip = ClipData.newPlainText("text", "199103181516");
+//        clipboard.setPrimaryClip(clip);
+//        Log.e("clickBtnAndInputText","复制好文本了就准备粘贴");
         //焦点（n是AccessibilityNodeInfo对象）
-        inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+//        inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
         //粘贴进入内容
-        inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+//        inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+        Bundle bundle = new Bundle();
+//        bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,CharSequence);
+        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"199103181516");
+        inputEdt.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,bundle);
     }
 
     /**
@@ -297,7 +306,7 @@ public class AutoBilily extends AccessibilityService {
     /**
      * 当目标node在webViewNode里是，通过控件类型名称找到对应node
      */
-    private AccessibilityNodeInfo findNodeByIsFouse(AccessibilityNodeInfo webViewNode){
+    private AccessibilityNodeInfo findNodeByIsFocuseable(AccessibilityNodeInfo webViewNode){
         AccessibilityNodeInfo tempNode ;
         if (webViewNode == null) return null;
         Stack<AccessibilityNodeInfo> nodeStack = new Stack<>();
@@ -305,7 +314,7 @@ public class AutoBilily extends AccessibilityService {
         while (!nodeStack.isEmpty()){
             tempNode = nodeStack.pop();
             if (tempNode == null) continue;
-            if (tempNode.isFocused() && tempNode.isClickable()){
+            if (tempNode.isFocusable()){
                 Log.e(TAG,"恭喜，找到了目标输入框node");
                 return tempNode;
             }
