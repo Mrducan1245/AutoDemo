@@ -11,7 +11,6 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Path;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
@@ -130,34 +129,57 @@ public class AutoBilily extends AccessibilityService {
                     return;
                 }
                 ArrayList<String> textCollect = judgeUI(rootNode);
-                if (textCollect.contains("打包绑定区")&&textCollect.contains("前往")){
+                if (textCollect.contains("待命区")){
+                    Log.e("界面","前往待命区。。。");
+                    return;
+                }else if (textCollect.contains("异常处理区")){
+                    Log.e("界面","正在前往异常处理区。。。");
+                    return;
+                } else if (textCollect.contains("打包绑定区")&&textCollect.contains("前往")){
                     Log.e("界面","前往打包绑定区。。。");
                     return;
-                }else if (textCollect.contains("扫码绑定") && isClickInputBtnFirst){
+                }else if (textCollect.contains("扫码绑定") ){
                     Log.e("界面","等待绑定载物箱。。。");
                     webView = returnWebView(rootNode);
-                    AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
-                    AccessibilityNodeInfo inputEdt = findNodeByClassName(webView,"android.widget.EditText");
+
+                    //如果是第一道这个界面那么就点击按钮
+                    if (isClickInputBtnFirst){
+                        AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
+                        performClick(inputBtn);
+                        return;
+                    }
+                    AccessibilityNodeInfo inputEdt = findNodeByIsFouse(webView);
                     //点击输入按钮并且输入文字
-                    clickBtnAndInputText(inputBtn,inputEdt);
+                    try {
+                        clickBtnAndInputText(inputEdt);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     isClickInputBtnFirst = false;
                     return;
+
                 }else if (textCollect.contains("前往")&& !textCollect.contains("打包绑定区")){
                     isClickInputBtnFirst = true;
                     Log.e("界面","前往拣货点中。。。。");
                     return;
-                }else if (textCollect.contains("输入") && textCollect.contains("异常上报")&& !textCollect.contains("扫码绑定") && isClickInputBtnFirst){
+                }else if (textCollect.contains("输入") && textCollect.contains("异常上报")&& !textCollect.contains("扫码绑定") ){
                     Log.e("界面", "正在拣货点位置待拣货");
                     webView = returnWebView(rootNode);
-                    //
-                    AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
-                    AccessibilityNodeInfo inputEdt = findNodeByClassName(webView,"android.widget.EditText");
+
+                    //如果是第一道这个界面那么就点击按钮
+                    if (isClickInputBtnFirst){
+                        AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
+                        performClick(inputBtn);
+                        return;
+                    }
+                    AccessibilityNodeInfo inputEdt = findNodeByIsFouse(webView);
                     //点击输入按钮并且输入文字
-                    clickBtnAndInputText(inputBtn,inputEdt);
+                    try {
+                        clickBtnAndInputText(inputEdt);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     isClickInputBtnFirst = false;
-                    return;
-                }else if (textCollect.contains("异常处理区")){
-                    Log.e("界面","正在前往异常处理区。。。");
                     return;
                 }else if (textCollect.contains("确定")) {
                     //包含着两个那么直接点击这俩按钮
@@ -210,25 +232,19 @@ public class AutoBilily extends AccessibilityService {
 
     /**
      * 点击输入按钮并且在输入框里输入文字
-     * @param inputBtn
-     * @param inputEdt
+     *     * @param inputEdt
      */
-    private void clickBtnAndInputText(AccessibilityNodeInfo inputBtn,AccessibilityNodeInfo inputEdt) {
-
-        if (inputBtn != null)  {
-            performClick(inputBtn);
-        }else if (inputEdt != null) {
-//            Bundle bundle = new Bundle();
-//            bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"199103181516");
-//            inputEdt.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT);
-            ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
-            ClipData clip = ClipData.newPlainText("text", "199103181516");
-            clipboard.setPrimaryClip(clip);
-            //焦点（n是AccessibilityNodeInfo对象）
-//            inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-            //粘贴进入内容
-            inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+    private void clickBtnAndInputText(AccessibilityNodeInfo inputEdt) throws InterruptedException {
+        if (inputEdt == null )  {
+            return;
         }
+        ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("text", "199103181516");
+        clipboard.setPrimaryClip(clip);
+        //焦点（n是AccessibilityNodeInfo对象）
+        inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+        //粘贴进入内容
+        inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
     }
 
     /**
@@ -281,7 +297,7 @@ public class AutoBilily extends AccessibilityService {
     /**
      * 当目标node在webViewNode里是，通过控件类型名称找到对应node
      */
-    private AccessibilityNodeInfo findNodeByClassName(AccessibilityNodeInfo webViewNode,String goalClassName){
+    private AccessibilityNodeInfo findNodeByIsFouse(AccessibilityNodeInfo webViewNode){
         AccessibilityNodeInfo tempNode ;
         if (webViewNode == null) return null;
         Stack<AccessibilityNodeInfo> nodeStack = new Stack<>();
@@ -289,8 +305,8 @@ public class AutoBilily extends AccessibilityService {
         while (!nodeStack.isEmpty()){
             tempNode = nodeStack.pop();
             if (tempNode == null) continue;
-            if (tempNode.getClassName()!=null && tempNode.getClassName().toString().equals(goalClassName)){
-                Log.e(TAG,"恭喜，找到了目标node:"+goalClassName);
+            if (tempNode.isFocused() && tempNode.isClickable()){
+                Log.e(TAG,"恭喜，找到了目标输入框node");
                 return tempNode;
             }
             int childount = tempNode.getChildCount();
@@ -299,7 +315,7 @@ public class AutoBilily extends AccessibilityService {
                 nodeStack.push(tempNode.getChild(i));
             }
         }
-        Log.e(TAG,"找不到目标node");
+        Log.e(TAG,"找不到目标输入框node");
         return null;
     }
 
