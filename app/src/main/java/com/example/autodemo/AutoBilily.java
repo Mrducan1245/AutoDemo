@@ -23,6 +23,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -242,18 +243,25 @@ public class AutoBilily extends AccessibilityService {
         if (inputEdt == null )  {
             return;
         }
-//        ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
-//        ClipData clip = ClipData.newPlainText("text", "199103181516");
-//        clipboard.setPrimaryClip(clip);
-//        Log.e("clickBtnAndInputText","复制好文本了就准备粘贴");
-        //焦点（n是AccessibilityNodeInfo对象）
+        ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("text", "199103181516");
+        clipboard.setPrimaryClip(clip);
+        Log.e("clickBtnAndInputText","复制好文本了就准备粘贴");
+//        焦点（n是AccessibilityNodeInfo对象）
 //        inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-        //粘贴进入内容
-//        inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
-        Bundle bundle = new Bundle();
-//        bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,CharSequence);
-        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"199103181516");
-        inputEdt.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,bundle);
+//        粘贴进入内容
+        inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+        //通过adb命令输入回车
+        try {
+            Process process = Runtime.getRuntime().exec("adb adb shell input keyevent 66");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        Bundle bundle = new Bundle();
+////        bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,CharSequence);
+//        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"199103181516");
+//        inputEdt.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,bundle);
     }
 
     /**
