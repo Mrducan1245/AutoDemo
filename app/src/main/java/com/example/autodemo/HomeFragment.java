@@ -44,7 +44,7 @@ public class HomeFragment extends Fragment {
                 Editable editable = editText.getText();
                 goalStrign = editable.toString();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                  getActivity().getSystemService(AutoBilily.class).eleText = goalStrign;
+//                  getActivity().getSystemService(AutoBilily.class).eleText = goalStrign;
                 }
                 Log.e("输入值","查找的字符是"+goalStrign);
             }

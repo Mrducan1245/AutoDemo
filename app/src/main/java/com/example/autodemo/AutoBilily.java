@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
+import android.app.Instrumentation;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
 import android.content.ClipData;
@@ -23,7 +24,10 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +38,6 @@ public class AutoBilily extends AccessibilityService {
     private final String LAUCHER = "com.syriusrobotics.platform.jarvis.MainFlutterActivity";
     private final  String TAG = "SpeedPicker";
     private AccessibilityNodeInfo goalNode;
-    public String eleText = "领淘金币";
     private final MainHandler mainHandler = new MainHandler(this);
     //定时任务管理器
     public static AlarmManager alarmManager;
@@ -147,18 +150,22 @@ public class AutoBilily extends AccessibilityService {
                 }else if (textCollect.contains("扫码绑定") ){
                     Log.e("界面","等待绑定载物箱。。。");
                     webView = returnWebView(rootNode);
-
+                    AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
                     //如果是第一道这个界面那么就点击按钮
                     if (isClickInputBtnFirst){
-                        AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
                         performClick(inputBtn);
                         isClickInputBtnFirst = false;
+                        return;
+                    }
+
+                    if (inputBtn!=null) {
+                        performClick(inputBtn);
                         return;
                     }
                     AccessibilityNodeInfo inputEdt = findNodeByIsFocuseable(webView);
                     //点击输入按钮并且输入文字
                     try {
-                        clickBtnAndInputText(inputEdt);
+                        inputTextAndEnter(inputEdt);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -182,7 +189,7 @@ public class AutoBilily extends AccessibilityService {
                     AccessibilityNodeInfo inputEdt = findNodeByIsFocuseable(webView);
                     //点击输入按钮并且输入文字
                     try {
-                        clickBtnAndInputText(inputEdt);
+                        inputTextAndEnter(inputEdt);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -239,30 +246,61 @@ public class AutoBilily extends AccessibilityService {
      * 点击输入按钮并且在输入框里输入文字
      *     * @param inputEdt
      */
-    private void clickBtnAndInputText(AccessibilityNodeInfo inputEdt) throws InterruptedException {
+    private void inputTextAndEnter(AccessibilityNodeInfo inputEdt) throws InterruptedException {
         if (inputEdt == null )  {
             return;
         }
+        Thread.sleep(1000);
+        //创建粘贴板并复制
         ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clip = ClipData.newPlainText("text", "199103181516");
+        ClipData clip = ClipData.newPlainText("text", "199103181516\n");
         clipboard.setPrimaryClip(clip);
         Log.e("clickBtnAndInputText","复制好文本了就准备粘贴");
-//        焦点（n是AccessibilityNodeInfo对象）
-//        inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-//        粘贴进入内容
         inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
-        //通过adb命令输入回车
-        try {
-            Process process = Runtime.getRuntime().exec("adb adb shell input keyevent 66");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        //为了保证键盘弹窗
+        inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+        Thread.sleep(500);
+        dispatchGestureView(1,1087,1856);
+//        //通过Instrumentation发送键盘事件
+//        Instrumentation inst = new Instrumentation();
+//        inst.sendKeyDownUpSync(66);
+
+//        //通过adb命令输入回车
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    Process process = Runtime.getRuntime().exec("input keyevent 66");
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }).start();
+
+//        execShell("input keyevent 66");
 
 //        Bundle bundle = new Bundle();
-////        bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,CharSequence);
-//        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"199103181516");
+//        bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"199103181516 \n");
+////        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,"199103181516");
 //        inputEdt.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT,bundle);
     }
+
+
+
+  private void sendKeyCode(final  int keyCode){
+      new Thread(new Runnable() {
+          @Override
+          public void run() {
+              try {
+                  Instrumentation instrumentation = new Instrumentation();
+                  instrumentation.sendKeyDownUpSync(keyCode);
+                  Log.e("ceshi","点击了回车按钮");
+              }catch (Exception e){
+                  e.printStackTrace();
+              }
+          }
+      }).start();
+  }
 
     /**
      * 在webView里找寻目标node，如果找到就通过maninHandler将包含webViewNode的message发送出去
