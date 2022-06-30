@@ -6,6 +6,9 @@ import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.Instrumentation;
 import android.app.KeyguardManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -122,123 +125,119 @@ public class AutoBilily extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         int eventType = event.getEventType();
-        switch (eventType){
-            case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                if (event.getClassName() == null) return;
-                String className = event.getClassName().toString();
+        //窗口中内容变化了或者有对应通知就调用，就调用此函数
+        if (eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED || eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) {
+            if (event.getClassName() == null) return;
+            String className = event.getClassName().toString();
 //                Log.e("服务","窗口内容有变化,当前界面是："+className);
-                //只要界面有变化就获取当前界面的根布局
-                AccessibilityNodeInfo rootNode = getRootInActiveWindow();
-                AccessibilityNodeInfo webView;
-                if (rootNode == null){
-                    Log.e(TAG,"rootNode为空");
+            //只要界面有变化就获取当前界面的根布局
+            AccessibilityNodeInfo rootNode = getRootInActiveWindow();
+            AccessibilityNodeInfo webView;
+            if (rootNode == null) {
+                Log.e(TAG, "rootNode为空");
+                return;
+            }
+            ArrayList<String> textCollect = judgeUI(rootNode);
+            if (textCollect.contains("待命区")) {
+                Log.e("界面", "前往待命区。。。");
+                return;
+            } else if (textCollect.contains("等待任务中")) {
+                Log.e("界面", "等待任务中。。。");
+                return;
+            } else if (textCollect.contains("异常处理区")) {
+                Log.e("界面", "正在前往异常处理区。。。");
+                return;
+            } else if (textCollect.contains("打包绑定区") && textCollect.contains("前往")) {
+                Log.e("界面", "前往打包绑定区。。。");
+                return;
+            } else if (textCollect.contains("扫码绑定")) {
+                Log.e("界面", "等待绑定载物箱。。。");
+                webView = returnWebView(rootNode);
+                AccessibilityNodeInfo inputBtn = findNodeByText(webView, "输入");
+                //如果是第一道这个界面那么就点击按钮
+                if (isClickInputBtnFirst) {
+                    performClick(inputBtn);
+                    isClickInputBtnFirst = false;
                     return;
                 }
-                ArrayList<String> textCollect = judgeUI(rootNode);
-                if (textCollect.contains("待命区")){
-                    Log.e("界面","前往待命区。。。");
-                    return;
-                }else if (textCollect.contains("等待任务中")){
-                    Log.e("界面","等待任务中。。。");
-                    return;
-                } else if (textCollect.contains("异常处理区")){
-                    Log.e("界面","正在前往异常处理区。。。");
-                    return;
-                } else if (textCollect.contains("打包绑定区")&&textCollect.contains("前往")){
-                    Log.e("界面","前往打包绑定区。。。");
-                    return;
-                }else if (textCollect.contains("扫码绑定") ){
-                    Log.e("界面","等待绑定载物箱。。。");
-                    webView = returnWebView(rootNode);
-                    AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
-                    //如果是第一道这个界面那么就点击按钮
-                    if (isClickInputBtnFirst){
-                        performClick(inputBtn);
-                        isClickInputBtnFirst = false;
-                        return;
-                    }
 
-                    if (inputBtn!=null) {
-                        performClick(inputBtn);
-                        return;
-                    }
-                    AccessibilityNodeInfo inputEdt = findNodeByIsFocuseable(webView);
-                    //点击输入按钮并且输入文字
-                    try {
-                        inputTextAndEnter(inputEdt);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    return;
-
-                }else if (textCollect.contains("前往")&& !textCollect.contains("打包绑定区")){
-                    isClickInputBtnFirst = true;
-                    Log.e("界面","前往拣货点中。。。。");
-                    return;
-                }else if (textCollect.contains("输入") && textCollect.contains("异常上报")&& !textCollect.contains("扫码绑定") ){
-                    Log.e("界面", "正在拣货点位置待拣货");
-                    webView = returnWebView(rootNode);
-
-                    //如果是第一道这个界面那么就点击按钮
-                    if (isClickInputBtnFirst){
-                        AccessibilityNodeInfo inputBtn = findNodeByText(webView,"输入");
-                        performClick(inputBtn);
-                        isClickInputBtnFirst = false;
-                        return;
-                    }
-                    AccessibilityNodeInfo inputEdt = findNodeByIsFocuseable(webView);
-                    //点击输入按钮并且输入文字
-                    try {
-                        inputTextAndEnter(inputEdt);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    return;
-                }else if (textCollect.contains("确定")) {
-                    webView = returnWebView(rootNode);
-                    AccessibilityNodeInfo confirmBtn = findNodeByText(webView, "确定");
-                    performClick(confirmBtn);
-                    return;
-
-                }else if (textCollect.contains("完成")){
-                    webView = returnWebView(rootNode);
-                    AccessibilityNodeInfo completeBtn = findNodeByText(webView, "完成");
-                    performClick(completeBtn);
-                    return;
-
-                }else if (textCollect.contains("已取下")){
-                    webView = returnWebView(rootNode);
-                    AccessibilityNodeInfo uploadBtn = findNodeByText(webView, "已取下");
-                    performClick(uploadBtn);
+                if (inputBtn != null) {
+                    performClick(inputBtn);
                     return;
                 }
-//                //通过找text找到eleText元素并执行点击
-//                if (className.equals(LAUCHER)){
-//                    wakeUpAndUnlock();//唤醒屏幕
-//                    AccessibilityNodeInfo goalNode = findNodeByText2(rootNode,eleText);
-//                    performClick(goalNode);
-//                }else if (className.equals("com.taobao.browser.BrowserActivity")){
-//                    //当跳转到这个界面时开启新的线程并循环抓取那个元素是不是一直都在，抓到了就把消息发给主线程让它点击那个按钮
-//                    new Thread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            Log.e("LAUCHER","已经进入了run函数");
-//                            isLoadGoalNodeSuccessfull("淘宝人生",1);
-//                        }
-//                    }).start();
-//
-//                }else if (className.equals("com.taobao.browser.exbrowser.BrowserUpperActivity")){
-//                    new Thread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            isLoadGoalNodeSuccessfull("找答案",2);
-//                        }
-//                    }).start();
-//                    //重新设置闹钟
-//                    startMills += intervalMills;//执行一次闹钟后在重新执行一次
-//                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, startMills,pendingIntent);
-//                }
-                break;
+                AccessibilityNodeInfo inputEdt = findNodeByIsFocuseable(webView);
+                //点击输入按钮并且输入文字
+                try {
+                    inputTextAndEnter(inputEdt);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return;
+
+            } else if (textCollect.contains("前往") && !textCollect.contains("打包绑定区")) {
+                isClickInputBtnFirst = true;
+                Log.e("界面", "前往拣货点中。。。。");
+                return;
+            } else if (textCollect.contains("输入") && textCollect.contains("异常上报") && !textCollect.contains("扫码绑定")) {
+                Log.e("界面", "正在拣货点位置待拣货");
+                webView = returnWebView(rootNode);
+
+                //如果是第一道这个界面那么就点击按钮
+                if (isClickInputBtnFirst) {
+                    AccessibilityNodeInfo inputBtn = findNodeByText(webView, "输入");
+                    performClick(inputBtn);
+                    isClickInputBtnFirst = false;
+                    return;
+                }
+                AccessibilityNodeInfo inputEdt = findNodeByIsFocuseable(webView);
+                //点击输入按钮并且输入文字
+                try {
+                    inputTextAndEnter(inputEdt);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return;
+            } else if (textCollect.contains("确定")) {
+                webView = returnWebView(rootNode);
+                AccessibilityNodeInfo confirmBtn = findNodeByText(webView, "确定");
+                performClick(confirmBtn);
+                return;
+
+            } else if (textCollect.contains("完成")) {
+                webView = returnWebView(rootNode);
+                AccessibilityNodeInfo completeBtn = findNodeByText(webView, "完成");
+                performClick(completeBtn);
+                return;
+
+            } else if (textCollect.contains("已取下")) {
+                webView = returnWebView(rootNode);
+                AccessibilityNodeInfo uploadBtn = findNodeByText(webView, "已取下");
+                performClick(uploadBtn);
+                return;
+            }
+        }else {
+            //因为没有变化所以自己制作变化,那么就发送一个通知包含字符串：“AutoSpeedPicker收集界面内容”
+            sendNotification(this);
+        }
+    }
+
+    /**
+     * 发送通知
+     * @param context
+     */
+    private void sendNotification(Context context) {
+        String channelId = "auto";
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            Notification notification = new Notification.Builder(context,channelId)
+                    .setContentTitle("AutoSpeedPicker")
+                    .setContentText("AutoSpeedPicker收集界面内容")
+                    .setWhen(System.currentTimeMillis())
+                    .setSmallIcon(R.drawable.screen_shot)
+                    .build();
+            NotificationManager notificationManager = (NotificationManager)context.getSystemService(NOTIFICATION_SERVICE);
+            NotificationChannel channel = new NotificationChannel(channelId,"自动SpeedPicker", NotificationManager.IMPORTANCE_DEFAULT);
+            notificationManager.createNotificationChannel(channel);
+            notificationManager.notify(11,notification);
         }
     }
 
@@ -255,12 +254,10 @@ public class AutoBilily extends AccessibilityService {
         ClipboardManager clipboard = (ClipboardManager)this.getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("text", "199103181516\n");
         clipboard.setPrimaryClip(clip);
-        Log.e("clickBtnAndInputText","复制好文本了就准备粘贴");
         inputEdt.performAction(AccessibilityNodeInfo.ACTION_PASTE);
-        //为了保证键盘弹窗
-        inputEdt.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-        Thread.sleep(500);
-        dispatchGestureView(1,1087,1856);
+//        Thread.sleep(500);
+//        dispatchGestureView(1,1087,1856);
+        ExcuteShell.excuteShell("input keyevent 66");
 //        //通过Instrumentation发送键盘事件
 //        Instrumentation inst = new Instrumentation();
 //        inst.sendKeyDownUpSync(66);

@@ -16,10 +16,11 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class HomeFragment extends Fragment {
-    private Button btnStartServer,btnHFconfirm;
+    private Button btnStartServer,btnHFconfirm,btnExcAdb;
     private TextView tvIfCloseServer;
     private EditText editText;
 
@@ -38,6 +39,7 @@ public class HomeFragment extends Fragment {
         tvIfCloseServer = view .findViewById(R.id.tv_ifclose_service);
         editText = view.findViewById(R.id.et_serch);
         btnHFconfirm = view.findViewById(R.id.btn_hf_confirm);
+        btnExcAdb = view.findViewById(R.id.btn_excAdb);
         btnHFconfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -56,6 +58,13 @@ public class HomeFragment extends Fragment {
                 startActivity(intent);
             }
         });
+
+        btnExcAdb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ExcuteShell.excuteShell("setprop service.adb.tcp.port 5555");
+            }
+        });
     }
 
     @Override
@@ -66,5 +75,6 @@ public class HomeFragment extends Fragment {
     public HomeFragment(){
 
     }
+
 
 }
